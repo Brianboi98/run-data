@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Card Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --page-bg:   #0a1520;
+  --surface:   #111d2b;
+  --border:    #1e2e42;
+  --text:      #e0eaf5;
+  --muted:     #4e6a85;
+  --accent:    #e8522a;
+  --teal-1:    #0d3348;
+  --teal-2:    #0a2535;
+  --teal-3:    #07192a;
+}
+
+body {
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: 'Times New Roman', Times, serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 60px;
+  gap: 32px;
+}
+
+/* ── PAGE HEADING ── */
+.page-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #e0eaf5;
+  opacity: 0.5;
+}
+
+/* ── FORM ── */
+.form-wrap {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+
+.field label {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.field input {
+  background: var(--page-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 1rem;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus {
+  border-color: #2a7fad;
+  box-shadow: 0 0 0 3px rgba(42,127,173,0.15);
+}
+.field input::placeholder { color: #1e3045; }
+
+.gen-btn {
+  background: linear-gradient(135deg, #1a6fa0, #0f4d73);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+.gen-btn:hover  { opacity: 0.88; }
+.gen-btn:active { transform: scale(0.985); }
+
+/* ── PREVIEW ── */
+.preview-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── CARD ── */
+#workout-card {
+  width: 360px;
+  background: linear-gradient(160deg, #0e3a52 0%, #0a2a3e 40%, #071e30 75%, #040f1c 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  padding: 18px 20px 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -1px 0 rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.6);
+}
+
+/* Subtle texture overlay */
+#workout-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 10%, rgba(30,140,190,0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ── CARD HEADER ── */
+.c-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.c-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.runner-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.c-title {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.c-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+  font-style: italic;
+}
+
+/* ── STATS GRID — 2 columns, 3 rows ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-bottom: 14px;
+}
+
+.stat-row {
+  display: contents;
+}
+
+.stat-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.stat-item:nth-child(odd)  { padding-right: 12px; }
+.stat-item:nth-child(even) { padding-left: 12px; border-left: 1px solid rgba(255,255,255,0.05); }
+
+/* last row no bottom border */
+.stat-item:nth-last-child(-n+2) { border-bottom: none; }
+
+.stat-icon {
+  font-size: 0.75rem;
+  margin-right: 6px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  line-height: 1;
+  position: relative;
+  top: 1px;
+}
+
+.stat-number {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  font-family: 'Times New Roman', Times, serif;
+  letter-spacing: -0.01em;
+}
+
+.stat-unit {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
+  margin-left: 4px;
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 400;
+}
+
+/* ── BOTTOM DIVIDER LINE ── */
+.c-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  margin-bottom: 10px;
+}
+
+/* ── CARD FOOTER ── */
+.c-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.c-date {
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.08em;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.c-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.c-badge-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #4ecdc4;
+}
+
+.c-badge-text {
+  font-size: 0.52rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  font-family: 'Times New Roman', Times, serif;
+}
+
+/* ── DOWNLOAD BTN ── */
+.dl-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: rgba(255,255,255,0.5);
+  border-radius: 10px;
+  padding: 11px 26px;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dl-btn:hover {
+  border-color: #2a7fad;
+  color: #2a9fd6;
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">Workout Card</div>
+
+<!-- FORM -->
+<div class="form-wrap">
+  <div class="form-label">Enter Workout Data</div>
+  <div class="form-grid">
+    <div class="field">
+      <label>Distance (km)</label>
+      <input id="in-dist" type="text" placeholder="e.g. 5.2" />
+    </div>
+    <div class="field">
+      <label>Duration (h:mm:ss or mm:ss)</label>
+      <input id="in-dur" type="text" placeholder="e.g. 28:14" />
+    </div>
+    <div class="field">
+      <label>Avg Pace (min/km)</label>
+      <input id="in-pace" type="text" placeholder="e.g. 5:26" />
+    </div>
+    <div class="field">
+      <label>Avg Heart Rate (bpm)</label>
+      <input id="in-hr" type="number" placeholder="e.g. 148" />
+    </div>
+    <div class="field">
+      <label>Cadence (spm)</label>
+      <input id="in-cad" type="number" placeholder="e.g. 172" />
+    </div>
+  </div>
+  <button class="gen-btn" onclick="generateCard()">Generate Card</button>
+</div>
+
+<!-- CARD -->
+<div class="preview-wrap" id="preview-wrap">
+  <div id="workout-card">
+
+    <div class="c-header">
+      <div class="c-header-left">
+        <span class="runner-icon">🏃</span>
+        <span class="c-title">Running</span>
+      </div>
+      <div class="c-logo">&#8236;&#x2022;&#x2022;</div>
+    </div>
+
+    <div class="stats-grid">
+      <!-- Row 1 -->
+      <div class="stat-item">
+        <span class="stat-icon">⏱</span>
+        <span class="stat-number" id="c-dur">—</span>
+        <span class="stat-unit">min</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">📍</span>
+        <span class="stat-number" id="c-dist">—</span>
+        <span class="stat-unit">km</span>
+      </div>
+      <!-- Row 2 -->
+      <div class="stat-item">
+        <span class="stat-icon">⚡</span>
+        <span class="stat-number" id="c-pace">—</span>
+        <span class="stat-unit">/km</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">❤️</span>
+        <span class="stat-number" id="c-hr">—</span>
+        <span class="stat-unit">avg. bpm</span>
+      </div>
+      <!-- Row 3 -->
+      <div class="stat-item" style="grid-column: span 2; border-left: none; padding-left: 0;">
+        <span class="stat-icon">👟</span>
+        <span class="stat-number" id="c-cad">—</span>
+        <span class="stat-unit">spm cadence</span>
+      </div>
+    </div>
+
+    <div class="c-divider"></div>
+
+    <div class="c-footer">
+      <span class="c-date" id="c-date"></span>
+      <div class="c-badge">
+        <div class="c-badge-dot"></div>
+        <span class="c-badge-text">Completed</span>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="dl-btn" onclick="downloadCard()">↓ &nbsp;Download (Transparent)</button>
+</div>
+
+<script>
+  function generateCard() {
+    const dist  = document.getElementById('in-dist').value.trim() || '—';
+    const dur   = document.getElementById('in-dur').value.trim() || '—';
+    const pace  = document.getElementById('in-pace').value.trim().replace(/\/?(km|mi)/i,'').trim() || '—';
+    const hr    = document.getElementById('in-hr').value.trim() || '—';
+    const cad   = document.getElementById('in-cad').value.trim() || '—';
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+    });
+
+    document.getElementById('c-dist').textContent = dist;
+    document.getElementById('c-dur').textContent  = dur;
+    document.getElementById('c-pace').textContent = pace;
+    document.getElementById('c-hr').textContent   = hr;
+    document.getElementById('c-cad').textContent  = cad;
+    document.getElementById('c-date').textContent = dateStr;
+
+    document.getElementById('preview-wrap').style.display = 'flex';
+  }
+
+  function downloadCard() {
+    const card = document.getElementById('workout-card');
+    const orig = card.style.boxShadow;
+    card.style.boxShadow = 'none';
+
+    html2canvas(card, {
+      scale: 3,
+      backgroundColor: null,   // ← transparent PNG
+      useCORS: true,
+      logging: false,
+    }).then(canvas => {
+      card.style.boxShadow = orig;
+      const link = document.createElement('a');
+      link.download = 'workout-card.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+</script>
+</body>
+</html>
