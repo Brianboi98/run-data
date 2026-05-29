@@ -125,7 +125,8 @@ body {
 /* ── CARD ── */
 #workout-card {
   width: 360px;
-  background: linear-gradient(160deg, #0e3a52 0%, #0a2a3e 40%, #071e30 75%, #040f1c 100%);
+  /* FIXED: Replaced solid hex colors with RGBA at 0.75 opacity for transparency */
+  background: linear-gradient(160deg, rgba(14, 58, 82, 0.75) 0%, rgba(10, 42, 62, 0.75) 40%, rgba(7, 30, 48, 0.75) 75%, rgba(4, 15, 28, 0.75) 100%);
   border-radius: 16px;
   overflow: hidden;
   position: relative;
@@ -311,7 +312,6 @@ body {
 
 <div class="page-title">Workout Card</div>
 
-<!-- FORM -->
 <div class="form-wrap">
   <div class="form-label">Enter Workout Data</div>
   <div class="form-grid">
@@ -339,7 +339,6 @@ body {
   <button class="gen-btn" onclick="generateCard()">Generate Card</button>
 </div>
 
-<!-- CARD -->
 <div class="preview-wrap" id="preview-wrap">
   <div id="workout-card">
 
@@ -352,7 +351,6 @@ body {
     </div>
 
     <div class="stats-grid">
-      <!-- Row 1 -->
       <div class="stat-item">
         <span class="stat-icon">⏱</span>
         <span class="stat-number" id="c-dur">—</span>
@@ -363,7 +361,6 @@ body {
         <span class="stat-number" id="c-dist">—</span>
         <span class="stat-unit">km</span>
       </div>
-      <!-- Row 2 -->
       <div class="stat-item">
         <span class="stat-icon">⚡</span>
         <span class="stat-number" id="c-pace">—</span>
@@ -374,7 +371,6 @@ body {
         <span class="stat-number" id="c-hr">—</span>
         <span class="stat-unit">avg. bpm</span>
       </div>
-      <!-- Row 3 -->
       <div class="stat-item" style="grid-column: span 2; border-left: none; padding-left: 0;">
         <span class="stat-icon">👟</span>
         <span class="stat-number" id="c-cad">—</span>
@@ -423,6 +419,7 @@ body {
   function downloadCard() {
     const card = document.getElementById('workout-card');
     const orig = card.style.boxShadow;
+    // Hide box shadow before taking the screenshot so it doesn't create dark borders around the transparent edges
     card.style.boxShadow = 'none';
 
     html2canvas(card, {
